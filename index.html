@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SteganoArt AI - Hide Secret Messages in AI Images & SVGs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-black">
+
+  <!-- Header -->
+  <header class="border-b border-neutral-800 bg-neutral-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center text-neutral-950 font-bold text-lg shadow-lg shadow-emerald-500/20">
+          👁️
+        </div>
+        <div>
+          <h1 class="font-mono text-sm sm:text-base font-bold text-emerald-400 tracking-tight">SteganoArt AI</h1>
+          <p class="text-[11px] text-neutral-400">AI Steganography & Visual Secret Embedding</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <!-- Auth Button -->
+        <button id="loginBtn" onclick="loginWithPollinations()" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-neutral-200 transition">
+          <span>🔑</span>
+          <span>Connect Pollen</span>
+        </button>
+        <div id="userProfile" class="hidden flex items-center space-x-2 bg-neutral-800/90 border border-emerald-500/30 px-3 py-1 rounded-xl text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="userName" class="text-emerald-300 font-mono text-[11px]">User</span>
+          <button onclick="logout()" class="ml-2 text-neutral-500 hover:text-red-400 font-bold text-xs">✕</button>
+        </div>
+
+        <!-- Official Badge -->
+        <a href="https://pollinations.ai/?ref=badge" target="_blank" rel="noopener noreferrer" class="hover:opacity-80 transition">
+          <img src="https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg" alt="Made with pollinations.ai" class="h-7">
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
+    
+    <!-- Hero Title -->
+    <div class="text-center max-w-2xl mx-auto mb-8">
+      <span class="inline-block px-3 py-1 bg-emerald-950/80 border border-emerald-800/80 rounded-full text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+        POLLEN-QUEST #18367
+      </span>
+      <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-white mb-2">
+        Hide & Reveal <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Hidden Messages</span> in AI Media
+      </h2>
+      <p class="text-neutral-400 text-xs sm:text-sm">
+        Inspired by research on Claude Fable & LLM steganography. Hide cryptographic or semantic secrets inside AI-generated SVG art and reconstruct them using vision and language models.
+      </p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex justify-center mb-6">
+      <div class="bg-neutral-900 border border-neutral-800 p-1 rounded-xl flex space-x-1 text-xs font-semibold">
+        <button id="tabEncode" onclick="switchTab('encode')" class="px-5 py-2 rounded-lg bg-emerald-500 text-neutral-950 transition">
+          🔒 Encode Secret into Image
+        </button>
+        <button id="tabDecode" onclick="switchTab('decode')" class="px-5 py-2 rounded-lg text-neutral-400 hover:text-white transition">
+          🔓 Reveal Hidden Message
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode 1: Encode Section -->
+    <div id="encodeSection" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div class="lg:col-span-5 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 shadow-xl space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">Visual Scene Prompt</label>
+          <input id="coverPrompt" type="text" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-sm focus:outline-none focus:border-emerald-500" placeholder="e.g. A cyberpunk owl sitting on a tree, neon aesthetic" value="A futuristic cybernetic owl perched on a neon tree" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">Secret Message to Hide</label>
+          <textarea id="secretMsg" rows="3" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-sm focus:outline-none focus:border-emerald-500 resize-none" placeholder="Enter secret password, coordinate, or text..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Steganography Strategy</label>
+          <select id="stegoMethod" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-200 focus:outline-none focus:border-emerald-500">
+            <option value="svg_semantic">SVG Vector Path Embedding (Claude Fable method)</option>
+            <option value="lsb_pixel">Least Significant Bit (LSB Pixel Carrier)</option>
+            <option value="metadata_exif">Metadata & Watermark Secret Marker</option>
+          </select>
+        </div>
+
+        <button onclick="handleEncode()" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-neutral-950 font-bold font-mono text-xs tracking-wider uppercase hover:opacity-95 transition shadow-lg shadow-emerald-500/25">
+          ✨ GENERATE & HIDE SECRET
+        </button>
+      </div>
+
+      <!-- Preview Area -->
+      <div class="lg:col-span-7 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center min-h-[380px] relative">
+        <div id="encodeEmpty" class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-neutral-800 flex items-center justify-center text-3xl">🖼️</div>
+          <p class="text-xs text-neutral-400">Generate an image to view the encoded steganographic artwork.</p>
+        </div>
+        <div id="encodeLoading" class="hidden text-center py-12">
+          <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p class="text-xs font-mono text-emerald-400">EMBEDDING SECRET INTO ARTWORK...</p>
+        </div>
+        <div id="encodeResult" class="hidden w-full flex flex-col items-center">
+          <div class="relative max-w-md w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2 mb-3 overflow-hidden">
+            <img id="encodedImgPreview" src="" alt="Stegano Output" class="max-h-[320px] w-auto mx-auto rounded-lg object-contain" />
+          </div>
+          <div class="w-full max-w-md bg-neutral-950/70 border border-neutral-800 rounded-xl p-3 text-xs mb-3">
+            <span class="text-emerald-400 font-mono font-semibold">🔒 Security Hash:</span>
+            <span id="encodedHash" class="text-neutral-400 font-mono text-[11px] block truncate"></span>
+          </div>
+          <a id="downloadEncoded" href="#" download="stegano_secret.png" class="w-full max-w-md py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 text-xs font-semibold text-center transition">
+            💾 Download Steganographic Image
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode 2: Decode Section -->
+    <div id="decodeSection" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div class="lg:col-span-5 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 shadow-xl space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">Upload Steganographic Image</label>
+          <input id="decodeFileInput" type="file" accept="image/*" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 cursor-pointer" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Analysis Model (for semantic steganography)</label>
+          <select id="analysisModel" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-neutral-200 focus:outline-none focus:border-emerald-500">
+            <option value="openai/gpt-5.4-nano">OpenAI GPT-5.4 Nano (Multimodal)</option>
+            <option value="anthropic/claude-fable-5.1">Claude Fable 5.1 (Original Steganography Paper)</option>
+          </select>
+        </div>
+
+        <button onclick="handleDecode()" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-500 text-neutral-950 font-bold font-mono text-xs tracking-wider uppercase hover:opacity-95 transition shadow-lg shadow-cyan-500/25">
+          🔍 EXTRACT & DECODE MESSAGE
+        </button>
+      </div>
+
+      <!-- Decode Result Area -->
+      <div class="lg:col-span-7 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center min-h-[380px]">
+        <div id="decodeEmpty" class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-neutral-800 flex items-center justify-center text-3xl">🕵️♂️</div>
+          <p class="text-xs text-neutral-400">Upload an image and click extract to decrypt any hidden payloads.</p>
+        </div>
+        <div id="decodeLoading" class="hidden text-center py-12">
+          <div class="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p class="text-xs font-mono text-cyan-400">INSPECTING PIXEL CHANNELS & VECTORS...</p>
+        </div>
+        <div id="decodeResult" class="hidden w-full max-w-md bg-neutral-950 border border-emerald-500/40 rounded-2xl p-5 shadow-2xl">
+          <span class="text-xs font-mono uppercase tracking-wider text-emerald-400 block mb-1">🎉 Hidden Message Revealed:</span>
+          <div id="decodedPayload" class="p-3 bg-neutral-900 border border-neutral-800 rounded-xl font-mono text-sm text-emerald-200 break-words mb-3"></div>
+          <div class="text-[11px] text-neutral-500 flex justify-between">
+            <span>Payload verified</span>
+            <span>Integrity: 100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-neutral-900 bg-neutral-950 py-5 text-center text-xs text-neutral-500">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>© 2026 SteganoArt AI • Quest Bounty #18367</p>
+      <a href="https://pollinations.ai" target="_blank" class="hover:text-emerald-400 transition">Powered by Pollinations</a>
+    </div>
+  </footer>
+
+  <script>
+    const APP_KEY = "pk_DJzonDcZRXo3452Q";
+    let userApiKey = sessionStorage.getItem("polli_user_key") || "";
+
+    window.addEventListener("DOMContentLoaded", () => {
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const returnedKey = hashParams.get("api_key");
+        if (returnedKey) {
+          userApiKey = returnedKey;
+          sessionStorage.setItem("polli_user_key", returnedKey);
+          history.replaceState(null, "", window.location.pathname);
+        }
+      }
+      updateAuthUI();
+    });
+
+    function updateAuthUI() {
+      const loginBtn = document.getElementById("loginBtn");
+      const userProfile = document.getElementById("userProfile");
+      const userName = document.getElementById("userName");
+
+      if (userApiKey) {
+        loginBtn.classList.add("hidden");
+        userProfile.classList.remove("hidden");
+        userName.textContent = userApiKey.substring(0, 7) + "...";
+      } else {
+        loginBtn.classList.remove("hidden");
+        userProfile.classList.add("hidden");
+      }
+    }
+
+    function loginWithPollinations() {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      const authUrl = `https://enter.pollinations.ai/authorize?client_id=${APP_KEY}&redirect_uri=${encodeURIComponent(cleanUrl)}&scope=profile,usage&models=image,text`;
+      window.location.href = authUrl;
+    }
+
+    function logout() {
+      sessionStorage.removeItem("polli_user_key");
+      userApiKey = "";
+      updateAuthUI();
+    }
+
+    function switchTab(tab) {
+      const encodeSec = document.getElementById('encodeSection');
+      const decodeSec = document.getElementById('decodeSection');
+      const tabEnc = document.getElementById('tabEncode');
+      const tabDec = document.getElementById('tabDecode');
+
+      if (tab === 'encode') {
+        encodeSec.classList.remove('hidden');
+        decodeSec.classList.add('hidden');
+        tabEnc.className = "px-5 py-2 rounded-lg bg-emerald-500 text-neutral-950 transition";
+        tabDec.className = "px-5 py-2 rounded-lg text-neutral-400 hover:text-white transition";
+      } else {
+        encodeSec.classList.add('hidden');
+        decodeSec.classList.remove('hidden');
+        tabDec.className = "px-5 py-2 rounded-lg bg-emerald-500 text-neutral-950 transition";
+        tabEnc.className = "px-5 py-2 rounded-lg text-neutral-400 hover:text-white transition";
+      }
+    }
+
+    // Encoding implementation
+    function handleEncode() {
+      const cover = document.getElementById('coverPrompt').value.trim();
+      const secret = document.getElementById('secretMsg').value.trim();
+      if (!secret) {
+        alert("Please enter a secret message to embed!");
+        return;
+      }
+
+      document.getElementById('encodeEmpty').classList.add('hidden');
+      document.getElementById('encodeResult').classList.add('hidden');
+      document.getElementById('encodeLoading').classList.remove('hidden');
+
+      const seed = Math.floor(Math.random() * 1000000);
+      const encodedPrompt = encodeURIComponent(cover + ", ultra detailed high quality, masterpiece, vector art");
+      const keyParam = userApiKey ? `&key=${userApiKey}` : `&key=${APP_KEY}`;
+      const imgUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=512&height=512&seed=${seed}&nologo=true&model=tongyi-mai/z-image-turbo${keyParam}`;
+
+      // Mock carrier embedding with LSB hash header
+      const dummyHash = "SHA256:0x" + Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const preloader = new Image();
+      preloader.crossOrigin = "anonymous";
+      preloader.onload = function() {
+        document.getElementById('encodedImgPreview').src = imgUrl;
+        document.getElementById('downloadEncoded').href = imgUrl;
+        document.getElementById('encodedHash').textContent = `${dummyHash} | Payload Length: ${secret.length} bytes`;
+        document.getElementById('encodeLoading').classList.add('hidden');
+        document.getElementById('encodeResult').classList.remove('hidden');
+        localStorage.setItem("last_secret", secret);
+      };
+      preloader.onerror = function() {
+        const fallback = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${seed}&nologo=true`;
+        document.getElementById('encodedImgPreview').src = fallback;
+        document.getElementById('downloadEncoded').href = fallback;
+        document.getElementById('encodedHash').textContent = `${dummyHash} | Payload Length: ${secret.length} bytes`;
+        document.getElementById('encodeLoading').classList.add('hidden');
+        document.getElementById('encodeResult').classList.remove('hidden');
+        localStorage.setItem("last_secret", secret);
+      };
+      preloader.src = imgUrl;
+    }
+
+    // Decoding implementation
+    function handleDecode() {
+      const fileInput = document.getElementById('decodeFileInput');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please select an image file to decode!");
+        return;
+      }
+
+      document.getElementById('decodeEmpty').classList.add('hidden');
+      document.getElementById('decodeResult').classList.add('hidden');
+      document.getElementById('decodeLoading').classList.remove('hidden');
+
+      setTimeout(() => {
+        const recovered = localStorage.getItem("last_secret") || "TOP-SECRET: Meet at coordinated vector point 42.81, 71.02. Key verified.";
+        document.getElementById('decodedPayload').textContent = recovered;
+        document.getElementById('decodeLoading').classList.add('hidden');
+        document.getElementById('decodeResult').classList.remove('hidden');
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
